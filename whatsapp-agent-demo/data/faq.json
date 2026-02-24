@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "hours",
+      "patterns": [
+        "hours",
+        "open(ing)? hours",
+        "when are you open",
+        "close|closing",
+        "what time.*open",
+        "what time.*close"
+      ],
+      "answer": "Hours:\nMon–Fri: ${BIZ_HOURS_MON_FRI}\nSat: ${BIZ_HOURS_SAT}\nSun: ${BIZ_HOURS_SUN}\n(Local time: ${RESTAURANT_TIMEZONE})"
+    },
+    {
+      "id": "location",
+      "patterns": [
+        "address",
+        "location",
+        "where are you",
+        "how do i get there",
+        "parking"
+      ],
+      "answer": "${RESTAURANT_NAME} is located at:\n${RESTAURANT_ADDRESS}\nParking: Street and nearby garages (availability varies)."
+    },
+    {
+      "id": "menu_dietary",
+      "patterns": [
+        "menu",
+        "vegetarian|vegan",
+        "gluten(-| )?free",
+        "allerg(y|ies)",
+        "nut free",
+        "dairy free"
+      ],
+      "answer": "Menu & dietary notes:\nWe have vegetarian options, and we can flag common allergens.\nFor severe allergies, tell me what to avoid and we’ll confirm with the kitchen."
+    },
+    {
+      "id": "takeout_delivery",
+      "patterns": [
+        "takeout",
+        "pickup",
+        "to go",
+        "delivery",
+        "doordash|uber eats|grubhub"
+      ],
+      "answer": "Takeout: Yes.\nDelivery: Available via third-party services (varies).\nTell me what you want and I can help prep a pickup time (demo)."
+    },
+    {
+      "id": "reservations",
+      "patterns": [
+        "reservation",
+        "reserve",
+        "book a table",
+        "table for \\d+",
+        "party of \\d+"
+      ],
+      "answer": "I can help with reservations. Tell me party size, date, and time — or just say “reservation” to start."
+    },
+    {
+      "id": "human",
+      "patterns": [
+        "human",
+        "person",
+        "representative",
+        "manager",
+        "speak to someone",
+        "talk to someone"
+      ],
+      "answer": "No problem — I can loop in a human. Tell me what’s going on and I’ll pass it along."
+    }
+  ]
+}
