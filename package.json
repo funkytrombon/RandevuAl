@@ -1,0 +1,1 @@
+{"name":"randevual","private":true,"type":"module","scripts":{"check:i18n-keys":"node scripts/check-message-keys.mjs"}}
