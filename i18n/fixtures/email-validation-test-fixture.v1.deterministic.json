@@ -1,0 +1,6 @@
+{
+  "cases": [
+    { "id": "email-1", "expected": { "message_key": "EMAIL_INVALID" } },
+    { "id": "email-2", "expected": { "message_key": "APPOINTMENT_CANCELLED" } }
+  ]
+}
