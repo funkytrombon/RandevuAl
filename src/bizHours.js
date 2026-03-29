@@ -1,5 +1,12 @@
+/**
+ * Mesai saatleri kontrolü
+ * Europe/Istanbul varsayılan timezone
+ */
+
 function parseRange(range) {
-	// "11:00-21:00" -> { startMin, endMin }
+	if (!range || range.toLowerCase() === "kapalı" || range.toLowerCase() === "kapali") {
+		return null; // Kapalı gün
+	}
 	const [start, end] = range.split("-");
 	const toMin = (hhmm) => {
 		const [h, m] = hhmm.split(":").map(Number);
@@ -26,18 +33,38 @@ function getLocalParts(timeZone) {
 	};
 }
 
-export function isWithinBusinessHours() {
-	const tz = process.env.RESTAURANT_TIMEZONE || "America/Chicago";
+/**
+ * Şu an mesai saatleri içinde mi?
+ * @param {Object} [tenant] - Tenant bilgisi (opsiyonel)
+ * @returns {boolean}
+ */
+export function isWithinBusinessHours(tenant) {
+	const tz = tenant?.timezone || process.env.BUSINESS_TIMEZONE || "Europe/Istanbul";
 	const { weekday, minutes } = getLocalParts(tz);
 
-	const monFri = process.env.BIZ_HOURS_MON_FRI || "11:00-21:00";
-	const sat = process.env.BIZ_HOURS_SAT || "12:00-22:00";
-	const sun = process.env.BIZ_HOURS_SUN || "12:00-20:00";
+	const monFri = tenant?.working_hours_weekday || process.env.BIZ_HOURS_MON_FRI || "09:00-18:00";
+	const sat = tenant?.working_hours_saturday || process.env.BIZ_HOURS_SAT || "10:00-14:00";
+	const sun = tenant?.working_hours_sunday || process.env.BIZ_HOURS_SUN || "Kapalı";
 
 	let rangeStr = monFri;
 	if (weekday === "Sat") rangeStr = sat;
 	if (weekday === "Sun") rangeStr = sun;
 
-	const { startMin, endMin } = parseRange(rangeStr);
-	return minutes >= startMin && minutes < endMin;
+	const range = parseRange(rangeStr);
+	if (!range) return false; // Kapalı gün
+
+	return minutes >= range.startMin && minutes < range.endMin;
+}
+
+/**
+ * İş günü ve saatlerini formatlanmış string olarak döndür
+ * @param {Object} [tenant]
+ * @returns {string}
+ */
+export function getBusinessHoursText(tenant) {
+	const monFri = tenant?.working_hours_weekday || process.env.BIZ_HOURS_MON_FRI || "09:00-18:00";
+	const sat = tenant?.working_hours_saturday || process.env.BIZ_HOURS_SAT || "10:00-14:00";
+	const sun = tenant?.working_hours_sunday || process.env.BIZ_HOURS_SUN || "Kapalı";
+
+	return `Pazartesi-Cuma: ${monFri}\nCumartesi: ${sat}\nPazar: ${sun}`;
 }

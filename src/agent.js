@@ -1,70 +1,99 @@
 import OpenAI from "openai";
-import { lookupRestaurantFaq, createReservationStub, handoffToHumanStub } from "./tools.js";
-import { isWithinBusinessHours } from "./bizHours.js";
+import { createAppointment, handoffToHuman } from "./tools.js";
+import { isWithinBusinessHours, getBusinessHoursText } from "./bizHours.js";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 function mustHaveEnv(name) {
-	if (!process.env[name]) throw new Error(`Missing ${name}`);
+	if (!process.env[name]) throw new Error(`Eksik ortam değişkeni: ${name}`);
 }
 
-function restaurantContext() {
+function businessContext(tenant) {
 	return {
-		name: process.env.RESTAURANT_NAME || "Our Business",
-		phone: process.env.RESTAURANT_PHONE || "N/A",
-		address: process.env.RESTAURANT_ADDRESS || "N/A",
-		tz: process.env.RESTAURANT_TIMEZONE || "America/Chicago"
+		name: tenant?.company_name || process.env.BUSINESS_NAME || "İşletmemiz",
+		phone: process.env.BUSINESS_PHONE || "N/A",
+		address: process.env.BUSINESS_ADDRESS || "N/A",
+		tz: tenant?.timezone || process.env.BUSINESS_TIMEZONE || "Europe/Istanbul",
+		sector: tenant?.sector || process.env.BUSINESS_SECTOR || "health",
+		services: tenant?.services || process.env.BUSINESS_SERVICES || "Genel Hizmet"
 	};
 }
 
-function missingReservationFields(draft) {
-	// Phone intentionally NOT required for the demo.
+// --- Sektör bazlı kişilik ---
+
+const SECTOR_PERSONALITIES = {
+	health: `Sen profesyonel ve güven veren bir sağlık asistanısın. 
+Hastanın endişelerini anlayışla karşıla. Tıbbi teşhis veya tedavi önerisi YAPMA — sadece randevu yönlendirmesi yap.
+Acil durumlarda 112'yi aramaları gerektiğini belirt.`,
+	health_beauty: `Sen samimi ve profesyonel bir güzellik merkezi asistanısın.
+Müşterinin güzellik ve bakım ihtiyaçlarını anlayışla dinle.
+Hizmetler hakkında genel bilgi ver ama uzmanlık gerektiren sorularda randevu yönlendir.`,
+	education: `Sen yardımsever ve sabırlı bir eğitim kurumu asistanısın.
+Öğrencilerin ve velilerin sorularını anlaşılır şekilde yanıtla.
+Kayıt ve ders programları hakkında yönlendirme yap.`,
+	home_services: `Sen güvenilir ve pratik bir ev hizmetleri asistanısın.
+Müşterinin ihtiyacını hızlıca anla ve uygun hizmete yönlendir.`,
+	real_estate: `Sen profesyonel bir emlak danışmanı asistanısın.
+Müşterinin gayrimenkul ihtiyaçlarını dinle ve uygun görüşme randevusu oluştur.`,
+	hospitality: `Sen misafirperver ve sıcak bir konaklama asistanısın.
+Konukların rezervasyon ve bilgi taleplerine hızlı ve nazik yanıt ver.`
+};
+
+// --- Eksik randevu alanları ---
+
+function missingAppointmentFields(draft) {
 	const missing = [];
-	if (!draft.partySize) missing.push("partySize");
+	if (!draft.service) missing.push("service");
 	if (!draft.date) missing.push("date");
 	if (!draft.time) missing.push("time");
 	if (!draft.name) missing.push("name");
 	return missing;
 }
 
-function nextReservationQuestion(missing) {
+function nextAppointmentQuestion(missing, info) {
 	const field = missing[0];
 
 	switch (field) {
-		case "partySize":
-			return "Absolutely — how many people should I plan for?";
+		case "service":
+			return `Hangi hizmet için randevu almak istiyorsunuz?\n\n📋 Hizmetlerimiz:\n${info.services.split(",").map((s) => `• ${s.trim()}`).join("\n")}`;
 		case "date":
-			return "Nice. What day were you thinking — today, tomorrow, or another date?";
+			return "📅 Hangi gün için randevu almak istiyorsunuz? (Örn: bugün, yarın, 2 Nisan)";
 		case "time":
-			return "And what time works best?";
+			return "⏰ Saat kaçı tercih edersiniz? (Örn: 14:00, öğleden sonra 3)";
 		case "name":
-			return "Perfect. What name should I put it under?";
+			return "👤 Randevuyu hangi isimle oluşturmamı istersiniz?";
 		default:
-			return "Got it — what details should I add?";
+			return "Başka bilgiye ihtiyacım var — lütfen detay verin.";
 	}
 }
 
-async function extractReservationFields({ model, userText }) {
-	const tz = process.env.RESTAURANT_TIMEZONE || "America/Chicago";
+// --- AI ile randevu bilgisi çıkarma ---
+
+async function extractAppointmentFields({ model, userText, services }) {
+	const tz = process.env.BUSINESS_TIMEZONE || "Europe/Istanbul";
+	const now = new Date().toLocaleString("tr-TR", { timeZone: tz });
 
 	const extractorSystem = `
-Extract reservation details from the user's message.
-Return JSON only:
+Kullanıcının mesajından randevu bilgilerini çıkar.
+SADECE JSON döndür:
 {
-  "partySize": number|null,
+  "service": string|null,
   "date": "YYYY-MM-DD"|null,
   "time": "HH:mm"|null,
   "name": string|null,
   "phone": string|null,
+  "email": string|null,
   "notes": string|null,
   "cancel": boolean
 }
-Rules:
-- If user wants to cancel/stop, set cancel=true.
-- If no value present, use null.
-- Interpret relative dates like "today", "tonight", "this evening", "tomorrow" using timezone: ${tz}.
-- Convert times like "7pm" to 24-hour "19:00".
-- If the user says "this evening" and provides a time, treat date as today.
+Kurallar:
+- Kullanıcı iptal etmek istiyorsa cancel=true yap.
+- Değer yoksa null kullan.
+- "bugün", "yarın", "bu akşam", "haftaya" gibi göreceli tarihleri timezone (${tz}) ile yorumla.
+- Şu anki tarih/saat: ${now}
+- "3'te", "üçte", "saat 3" gibi ifadeleri 24 saat formatına çevir (bağlama göre öğleden sonra varsay).
+- "öğleden sonra" → 14:00-17:00 arası, "akşam" → 18:00-20:00 arası.
+- Sunulan hizmetler: ${services}. Kullanıcının yazdığı hizmeti en yakın eşleşmeyle eşle.
 `;
 
 	const extraction = await openai.chat.completions.create({
@@ -85,75 +114,126 @@ Rules:
 
 function mergeDraft(draft, parsed) {
 	const next = { ...draft };
-	for (const key of ["partySize", "date", "time", "name", "phone", "notes"]) {
+	for (const key of ["service", "date", "time", "name", "phone", "email", "notes"]) {
 		const v = parsed?.[key];
 		if (v !== null && v !== undefined && v !== "") next[key] = v;
 	}
 	return next;
 }
 
-export async function runAgent({ from, userText, session }) {
+// --- Ana Agent Fonksiyonu ---
+
+export async function runAgent({ from, userText, session, tenant }) {
 	mustHaveEnv("OPENAI_API_KEY");
 	const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
-	const info = restaurantContext();
+	const info = businessContext(tenant);
 
-	// --- Reservation flow mode ---
-	if (session.flow === "RESERVATION") {
-		const parsed = await extractReservationFields({ model, userText });
+	// --- Randevu akışı modu ---
+	if (session.flow === "RANDEVU") {
+		const parsed = await extractAppointmentFields({
+			model,
+			userText,
+			services: info.services
+		});
 
 		if (parsed.cancel) {
 			session.flow = null;
-			session.reservationDraft = {};
+			session.appointmentDraft = {};
 			return {
-				reply: "No problem — I’ve cancelled the reservation request. Anything else I can help with?",
-				newSession: session
+				reply: "👌 Tamam, randevu talebini iptal ettim. Başka bir konuda yardımcı olabilir miyim?",
+				newSession: session,
+				intent: "RANDEVU_IPTAL",
+				sentiment: "neutral",
+				booking_probability: 0
 			};
 		}
 
-		session.reservationDraft = mergeDraft(session.reservationDraft, parsed);
+		session.appointmentDraft = mergeDraft(session.appointmentDraft, parsed);
 
-		const missing = missingReservationFields(session.reservationDraft);
+		const missing = missingAppointmentFields(session.appointmentDraft);
 		if (missing.length > 0) {
-			return { reply: nextReservationQuestion(missing), newSession: session };
+			return { 
+				reply: nextAppointmentQuestion(missing, info), 
+				newSession: session,
+				intent: "RANDEVU_DEVAM",
+				sentiment: "positive",
+				booking_probability: 50 + (10 * (Object.keys(session.appointmentDraft).length))
+			};
 		}
 
-		const result = await createReservationStub({ from, draft: session.reservationDraft });
+		// Tüm bilgiler tamam — randevu oluştur
+		const result = await createAppointment({
+			from,
+			draft: session.appointmentDraft,
+			tenant
+		});
 
 		session.flow = null;
-		session.reservationDraft = {};
+		const completedDraft = { ...session.appointmentDraft };
+		session.appointmentDraft = {};
 
 		const msg =
-			`✅ You’re all set (demo)\n` +
-			`Name: ${result.name}\n` +
-			`Party: ${result.partySize}\n` +
-			`When: ${result.date} at ${result.time}\n` +
-			`Confirmation: ${result.reservationId}\n\n` +
-			`Anything else I can help with?`;
+			`✅ Randevunuz oluşturuldu!\n\n` +
+			`📋 Hizmet: ${completedDraft.service}\n` +
+			`📅 Tarih: ${completedDraft.date}\n` +
+			`⏰ Saat: ${completedDraft.time}\n` +
+			`👤 İsim: ${completedDraft.name}\n` +
+			`🔖 Referans: ${result.referenceId}\n\n` +
+			`İptal veya değişiklik için referans numaranızı saklayın.\n` +
+			`Başka bir şey sormak ister misiniz?`;
 
-		return { reply: msg, newSession: session };
+		session.history = [
+			...session.history.slice(-8),
+			{ role: "user", content: userText },
+			{ role: "assistant", content: msg }
+		];
+
+		return { 
+			reply: msg, 
+			newSession: session,
+			intent: "RANDEVU_TAMAM",
+			sentiment: "positive",
+			booking_probability: 100
+		};
 	}
 
-	// --- Normal mode: plan what to do ---
-	const withinHours = isWithinBusinessHours();
+	// --- Normal mod: niyeti belirle ---
+	const withinHours = isWithinBusinessHours(tenant);
 	const history = session.history.slice(-10);
+	const sectorPersonality = SECTOR_PERSONALITIES[info.sector] || SECTOR_PERSONALITIES.health;
 
 	const system = `
-You are the WhatsApp assistant for "${info.name}".
-You can:
-1) Answer FAQs (hours, location, menu/dietary, parking, specials, takeout).
-2) Start a reservation/appointment flow.
-3) Start a human handoff.
-Keep messages short and friendly. Ask one question at a time.
-Return JSON only:
+Sen "${info.name}" işletmesinin WhatsApp asistanısın.
+Kişiliğin ve Tonun: ${tenant?.ai_personality || sectorPersonality}
+
+--- [BİLGİ BANKASI / SSS] ---
+Aşağıdakiler işletme hakkında sabit bilgilerdir. Soruları bunlara dayanarak yanıtla.
+${tenant?.faq_text || "Özel bir detay girilmemiştir."}
+------------------------------
+
+Görevlerin:
+1) Yukarıdaki BİLGİ BANKASI'nı kullanarak soruları yanıtlamak
+2) Randevu oluşturma akışını başlatma
+3) İnsan temsilciye yönlendirme
+
+Kurallar:
+- HER ZAMAN Türkçe yanıt ver.
+- Mesajları kısa ve samimi tut.
+- Sadece bilgi bankasında varsa kesin bilgiler ver.
+- Sunulan hizmetler: ${info.services}
+- Çalışma saatleri: ${getBusinessHoursText(tenant)}
+- Şu an mesai ${withinHours ? "saatleri İÇİNDE" : "saatleri DIŞINDA"}.
+
+SADECE JSON döndür:
 {
-  "intent": "FAQ"|"RESERVATION"|"HANDOFF"|"GENERAL",
-  "startReservation": boolean,
+  "intent": "SSS"|"RANDEVU"|"TEMSILCI"|"GENEL",
+  "startAppointment": boolean,
   "startHandoff": boolean,
-  "faqQuery": string|null,
   "handoffSummary": string|null,
+  "sentiment": "positive"|"neutral"|"negative",
+  "booking_probability": number, // 0-100 arası
   "reply": string
 }
-Business hours availability right now: ${withinHours ? "AVAILABLE" : "NOT_AVAILABLE"}.
 `;
 
 	const decision = await openai.chat.completions.create({
@@ -171,85 +251,115 @@ Business hours availability right now: ${withinHours ? "AVAILABLE" : "NOT_AVAILA
 		plan = JSON.parse(decision.choices[0].message.content);
 	} catch {
 		plan = {
-			intent: "GENERAL",
-			startReservation: false,
+			intent: "GENEL",
+			startAppointment: false,
 			startHandoff: false,
 			faqQuery: null,
 			handoffSummary: null,
-			reply: "Could you rephrase that?"
+			reply: "Anlayamadım, tekrar yazar mısınız? 🤔"
 		};
 	}
 
-	// Try FAQ tool first when appropriate
-	if (plan.intent === "FAQ" || plan.faqQuery) {
-		const answer = await lookupRestaurantFaq({ question: plan.faqQuery || userText });
-		if (answer) {
-			session.history = [
-				...history,
-				{ role: "user", content: userText },
-				{ role: "assistant", content: answer }
-			];
-			return { reply: answer, newSession: session };
-		}
+	// SSS ve Genel Yanıtlar AI tarafından "reply" parametresinde otomatik oluşturuldu.
+	// Eğer müşteri direkt SSS soruyorsa ve randevu amacı yoksa direkt cevapla.
+	if (plan.intent === "SSS" && !plan.startAppointment && !plan.startHandoff) {
+		const answer = plan.reply || "Bu konuda emin değilim.";
+		session.history = [
+			...history,
+			{ role: "user", content: userText },
+			{ role: "assistant", content: answer }
+		];
+		return { 
+			reply: answer, 
+			newSession: session,
+			intent: plan.intent,
+			sentiment: plan.sentiment || "neutral",
+			booking_probability: plan.booking_probability || 0
+		};
 	}
 
-	// Start reservation flow — IMPORTANT: extract immediately from the original user message
-	if (plan.startReservation || plan.intent === "RESERVATION") {
-		session.flow = "RESERVATION";
+	// Randevu akışı başlat
+	if (plan.startAppointment || plan.intent === "RANDEVU") {
+		session.flow = "RANDEVU";
 
-		const initialParsed = await extractReservationFields({ model, userText });
+		const initialParsed = await extractAppointmentFields({
+			model,
+			userText,
+			services: info.services
+		});
+
 		if (initialParsed.cancel) {
 			session.flow = null;
-			session.reservationDraft = {};
-			const msg = "All good — I won’t make a reservation. Anything else?";
+			session.appointmentDraft = {};
+			const msg = "👌 Tamam, randevu talebi yok. Başka nasıl yardımcı olabilirim?";
 			session.history = [...history, { role: "user", content: userText }, { role: "assistant", content: msg }];
-			return { reply: msg, newSession: session };
+			return { 
+				reply: msg, 
+				newSession: session,
+				intent: "RANDEVU_IPTAL",
+				sentiment: "neutral",
+				booking_probability: 0
+			};
 		}
 
-		session.reservationDraft = mergeDraft({}, initialParsed);
+		session.appointmentDraft = mergeDraft({}, initialParsed);
 
-		const missing = missingReservationFields(session.reservationDraft);
-		const reply = missing.length > 0
-			? nextReservationQuestion(missing)
-			: "Got it. What name should I put it under?";
+		const missing = missingAppointmentFields(session.appointmentDraft);
 
-		session.history = [
-			...history,
-			{ role: "user", content: userText },
-			{ role: "assistant", content: reply }
-		];
-
-		// If we somehow already have everything including name, we can auto-confirm.
-		// (We keep it simple and ask for name if missingReservationFields returned empty unexpectedly.)
-		if (missing.length === 0 && session.reservationDraft.name) {
-			const result = await createReservationStub({ from, draft: session.reservationDraft });
+		// Eğer tüm bilgiler ilk mesajda verilmişse direkt oluştur
+		if (missing.length === 0) {
+			const result = await createAppointment({
+				from,
+				draft: session.appointmentDraft,
+				tenant
+			});
 
 			session.flow = null;
-			session.reservationDraft = {};
+			const completedDraft = { ...session.appointmentDraft };
+			session.appointmentDraft = {};
 
 			const msg =
-				`✅ Reservation confirmed (demo)\n` +
-				`• Name: ${result.name}\n` +
-				`• Party: ${result.partySize}\n` +
-				`• When: ${result.date} at ${result.time}\n` +
-				`Confirmation: ${result.reservationId}\n\n` +
-				`Anything else you’d like to know about ${info.name}?`;
+				`✅ Randevunuz oluşturuldu!\n\n` +
+				`📋 Hizmet: ${completedDraft.service}\n` +
+				`📅 Tarih: ${completedDraft.date}\n` +
+				`⏰ Saat: ${completedDraft.time}\n` +
+				`👤 İsim: ${completedDraft.name}\n` +
+				`🔖 Referans: ${result.referenceId}\n\n` +
+				`Başka bir konuda yardımcı olabilir miyim?`;
 
 			session.history = [...history, { role: "user", content: userText }, { role: "assistant", content: msg }];
-			return { reply: msg, newSession: session };
+			return { 
+				reply: msg, 
+				newSession: session,
+				intent: "RANDEVU_TAMAM",
+				sentiment: "positive",
+				booking_probability: 100
+			};
 		}
 
-		return { reply, newSession: session };
+		const reply = nextAppointmentQuestion(missing, info);
+		session.history = [
+			...history,
+			{ role: "user", content: userText },
+			{ role: "assistant", content: reply }
+		];
+		return { 
+			reply, 
+			newSession: session,
+			intent: "RANDEVU_BASLA",
+			sentiment: plan.sentiment || "neutral",
+			booking_probability: plan.booking_probability || 50
+		};
 	}
 
-	// Start human handoff (stub)
-	if (plan.startHandoff || plan.intent === "HANDOFF") {
+	// Temsilciye yönlendirme
+	if (plan.startHandoff || plan.intent === "TEMSILCI") {
 		const summary = plan.handoffSummary || userText;
-		const result = await handoffToHumanStub({ from, summary });
+		const result = await handoffToHuman({ from, summary, tenant });
 
 		const reply = result.available
-			? `Got it — I’m looping in a human now (demo). Please share any extra details here and they’ll reply shortly.\nRef: ${result.handoffId}`
-			: `We’re currently outside business hours. I can take a message and a human will follow up when we’re open.\nRef: ${result.handoffId}\nWhat should I pass along?`;
+			? `👤 Sizi bir temsilciye bağlıyorum. Lütfen konunuzu detaylandırın, en kısa sürede yanıt alacaksınız.\n🔖 Referans: ${result.handoffId}`
+			: `⏰ Şu an mesai saatleri dışındayız. Mesajınızı aldık, mesai saatleri içinde size dönüş yapılacaktır.\n🔖 Referans: ${result.handoffId}\n\nÇalışma saatlerimiz:\n${getBusinessHoursText(tenant)}`;
 
 		session.history = [
 			...history,
@@ -257,14 +367,20 @@ Business hours availability right now: ${withinHours ? "AVAILABLE" : "NOT_AVAILA
 			{ role: "assistant", content: reply }
 		];
 
-		return { reply, newSession: session };
+		return { 
+			reply, 
+			newSession: session,
+			intent: "TEMSILCI",
+			sentiment: plan.sentiment || "neutral",
+			booking_probability: 10
+		};
 	}
 
-	// Default reply
+	// Varsayılan yanıt
 	const reply =
 		typeof plan.reply === "string" && plan.reply.trim()
 			? plan.reply.trim()
-			: `How can I help? (hours, reservations, or a human)`;
+			: `Merhaba! 👋 Size nasıl yardımcı olabilirim?\n\n📅 Randevu almak\n❓ Soru sormak\n👤 Temsilciye bağlanmak`;
 
 	session.history = [
 		...history,
@@ -272,5 +388,11 @@ Business hours availability right now: ${withinHours ? "AVAILABLE" : "NOT_AVAILA
 		{ role: "assistant", content: reply }
 	];
 
-	return { reply, newSession: session };
+	return { 
+		reply, 
+		newSession: session,
+		intent: plan.intent || "GENEL",
+		sentiment: plan.sentiment || "neutral",
+		booking_probability: plan.booking_probability || 10
+	};
 }

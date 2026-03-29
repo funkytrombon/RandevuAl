@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RandevuAl SaaS - Üye Ol</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: { colors: { brand: { 600: '#7c3aed', 500: '#8b5cf6' }, darkBg: '#0f172a', darkCard: '#1e293b' } }
+            }
+        }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body x-data="authApp()" class="bg-gray-50 text-gray-900 dark:bg-darkBg dark:text-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Theme Toggle -->
+    <button @click="toggleTheme()" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition">
+        <span x-show="!isDark">🌙</span><span x-show="isDark" x-cloak>☀️</span>
+    </button>
+
+    <div class="max-w-md w-full bg-white dark:bg-darkCard p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-purple-500">Ücretsiz Başla</h2>
+            <p class="text-sm text-gray-500 mt-2">Kredi kartı gerekmez. Saniyeler içinde botunuzu kurun.</p>
+        </div>
+
+        <form @submit.prevent="register" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Şirket / Klinik Adı</label>
+                <input type="text" x-model="form.company_name" required class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-darkBg dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Sektörünüz</label>
+                <select x-model="form.sector" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-darkBg dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    <option value="health">Sağlık & Klinik</option>
+                    <option value="beauty">Güzellik & Kuaför</option>
+                    <option value="auto_repair">Araç Tamir</option>
+                    <option value="real_estate">Gayrimenkul</option>
+                    <option value="other">Diğer</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Email Adresi</label>
+                <input type="email" x-model="form.email" required class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-darkBg dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Şifre</label>
+                <input type="password" x-model="form.password" required class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-darkBg dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            </div>
+
+            <p x-show="errorMsg" x-text="errorMsg" class="text-red-500 text-sm font-semibold"></p>
+
+            <button type="submit" :disabled="loading" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 rounded-lg shadow-lg hover:shadow-brand-500/50 transition mt-4">
+                <span x-show="!loading">Kayıt Ol</span>
+                <span x-show="loading">Yükleniyor...</span>
+            </button>
+        </form>
+
+        <p class="text-center text-sm text-gray-500 mt-6">
+            Zaten hesabınız var mı? <a href="/login.html" class="text-brand-500 hover:underline font-semibold">Giriş Yap</a>
+        </p>
+    </div>
+
+    <script>
+        function authApp() {
+            return {
+                isDark: true,
+                loading: false,
+                errorMsg: '',
+                form: { company_name: '', sector: 'health', email: '', password: '' },
+
+                init() {
+                    if (localStorage.theme === 'light') { this.isDark = false; document.documentElement.classList.remove('dark'); }
+                },
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    document.documentElement.classList.toggle('dark', this.isDark);
+                    localStorage.theme = this.isDark ? 'dark' : 'light';
+                },
+                async register() {
+                    this.loading = true; this.errorMsg = '';
+                    try {
+                        const res = await fetch('/api/auth/register', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.form)
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error || 'Bilinmeyen hata');
+                        
+                        localStorage.setItem('saas_token', data.token);
+                        window.location.href = '/dashboard.html';
+                    } catch (err) {
+                        this.errorMsg = err.message;
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

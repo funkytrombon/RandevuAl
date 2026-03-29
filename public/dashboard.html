@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Müşteri Yönetim Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: { 
+                    colors: { 
+                        brand: { 600: '#7c3aed', 500: '#8b5cf6' }, 
+                        darkBg: '#090b11', 
+                        darkSidebar: '#0f111a', 
+                        darkCard: 'rgba(23, 25, 35, 0.4)' 
+                    } 
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        /* Pastel Blobs for Light Mode - Perfect Mockup Match - Soft Tonality */
+        .pastel-bg {
+            background-color: #f7f9fc;
+            position: relative;
+            overflow: hidden;
+        }
+        .blob {
+            position: absolute;
+            filter: blur(150px); /* Increased blur for even softer transitions */
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.5; /* Slightly more subtle intensity */
+        }
+        /* Top Left - Mint */
+        .blob-1 {
+            top: -20%;
+            left: -15%;
+            width: 60%;
+            height: 60%;
+            background: rgba(167, 243, 208, 0.4);
+        }
+        /* Top Right - Aqua/Blue */
+        .blob-2 {
+            top: -10%;
+            right: -15%;
+            width: 55%;
+            height: 55%;
+            background: rgba(186, 230, 253, 0.4);
+        }
+        /* Middle Left - Peach */
+        .blob-3 {
+            top: 35%;
+            left: -10%;
+            width: 45%;
+            height: 45%;
+            background: rgba(254, 215, 170, 0.3);
+        }
+        /* Bottom Right - Purple */
+        .blob-4 {
+            bottom: -15%;
+            right: -10%;
+            width: 50%;
+            height: 50%;
+            background: rgba(221, 214, 254, 0.4);
+        }
+        /* Bottom Left - Pink */
+        .blob-5 {
+            bottom: -10%;
+            left: 5%;
+            width: 40%;
+            height: 40%;
+            background: rgba(252, 231, 243, 0.4);
+        }
+
+        .dark .pastel-bg {
+            background-color: #090b11;
+        }
+        .dark .blob {
+            display: none;
+        }
+
+        /* Premium Dark Mode Glass & Glow */
+        .dark .glass-card {
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+        .sidebar-item-active {
+            box-shadow: 0 0 15px -5px rgba(124, 58, 237, 0.3);
+        }
+        .dark .sidebar-item-active {
+            background: linear-gradient(90deg, rgba(124, 58, 237, 0.12) 0%, transparent 100%) !important;
+            border-left: 4px solid #8b5cf6 !important;
+            color: white !important;
+        }
+        /* Dashboard Card Animations */
+        .card-hover:hover {
+            transform: translateY(-4px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body x-data="dashboardApp()" class="bg-gray-50 text-gray-900 dark:bg-darkBg dark:text-gray-100 min-h-screen flex text-sm sm:text-base overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white/60 dark:bg-darkSidebar/90 border-r border-white/10 dark:border-white/5 flex flex-col hidden sm:flex z-20 backdrop-blur-xl">
+        <div class="h-20 flex items-center px-8">
+            <div class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-teal-400 rounded-xl flex items-center justify-center mr-3 shadow-lg shadow-blue-500/20">
+                <div class="w-5 h-5 flex items-center justify-center">
+                    <svg class="text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                </div>
+            </div>
+            <span class="font-bold text-xl tracking-tight text-gray-800 dark:text-white">Nexus AI</span>
+        </div>
+        <div class="flex-grow p-4 space-y-1">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 mb-4">Masaüstü</p>
+            <button @click="tab = 'overview'" :class="tab === 'overview' ? 'bg-blue-50 text-blue-600 dark:bg-transparent sidebar-item-active' : 'hover:bg-gray-50 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400'" class="w-full text-left px-5 py-3 rounded-2xl font-bold transition flex items-center gap-3">
+                <span class="text-lg">📊</span> Dashboard
+            </button>
+            <button @click="tab = 'ai_settings'" :class="tab === 'ai_settings' ? 'bg-blue-50 text-blue-600 dark:bg-transparent sidebar-item-active' : 'hover:bg-gray-50 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400'" class="w-full text-left px-5 py-3 rounded-2xl font-bold transition flex items-center gap-3">
+                <span class="text-lg">🤖</span> Yapay Zeka
+            </button>
+            <button @click="openInbox()" :class="tab === 'inbox' ? 'bg-blue-50 text-blue-600 dark:bg-transparent sidebar-item-active' : 'hover:bg-gray-50 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400'" class="w-full text-left px-5 py-3 rounded-2xl font-bold transition flex items-center gap-3">
+                <span class="text-lg">💬</span> Mesajlar
+            </button>
+            <button @click="tab = 'integration'" :class="tab === 'integration' ? 'bg-blue-50 text-blue-600 dark:bg-transparent sidebar-item-active' : 'hover:bg-gray-50 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400'" class="w-full text-left px-5 py-3 rounded-2xl font-bold transition flex items-center gap-3">
+                <span class="text-lg">🔗</span> Ayarlar
+            </button>
+        </div>
+        <div class="p-6 border-t border-gray-100 dark:border-white/5">
+            <button @click="logout()" class="w-full text-left px-5 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl font-bold transition flex items-center gap-3">
+                <span>🚪</span> Güvenli Çıkış
+            </button>
+        </div>
+    </aside>
+
+    <!-- Content Area -->
+    <main class="flex-grow flex flex-col h-screen overflow-hidden pastel-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="blob blob-4"></div>
+        <div class="blob blob-5"></div>
+        
+        <!-- Header -->
+        <header class="h-20 bg-white/20 dark:bg-darkBg backdrop-blur-md border-b border-gray-100 dark:border-white/5 flex items-center justify-between px-10 z-10">
+            <div>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">Yönetim Paneli</p>
+                <h1 class="font-bold text-2xl text-gray-800 dark:text-white">Welcome, <span x-text="tenant.company_name?.split(' ')[0]">Alex</span>!</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <button @click="toggleTheme()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition">
+                    <span x-show="!isDark">🌙</span><span x-show="isDark" x-cloak>☀️</span>
+                </button>
+                <div class="text-sm font-semibold px-3 py-1 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400">
+                    Paket: <span class="capitalize" x-text="tenant.subscription_plan"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Body -->
+        <div class="flex-grow p-6 overflow-y-auto" x-show="!loading">
+            
+            <div class="max-w-4xl mx-auto space-y-6">
+
+                <!-- TAB: OVERVIEW -->
+                <div x-show="tab === 'overview'" class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Hoş Geldiniz, <span x-text="tenant.company_name"></span>!</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-transparent dark:glass-card p-8 rounded-3xl shadow-sm border border-gray-50 dark:border-white/5 relative overflow-hidden group card-hover">
+                            <div class="relative z-10">
+                                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">WhatsApp Mesaj Kullanımı</h3>
+                                <div class="flex items-end gap-2 mb-4">
+                                    <span class="text-4xl font-bold text-gray-800 dark:text-white" x-text="tenant.current_month_ai_calls || 0"></span>
+                                    <span class="text-gray-400 font-medium mb-1">/ <span x-text="tenant.subscription_plan === 'pro' ? '∞' : (tenant.subscription_plan === 'starter' ? '500' : '50')"></span></span>
+                                    <span class="ml-auto bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400 text-[10px] font-bold px-2 py-1 rounded" x-text="getPercentage() + '%'"></span>
+                                </div>
+                                
+                                <!-- Progress Bar -->
+                                <div class="w-full bg-gray-100 dark:bg-white/5 rounded-full h-3 overflow-hidden">
+                                    <div class="bg-gradient-to-r from-brand-500 to-indigo-500 h-3 rounded-full transition-all duration-1000" :style="{ width: getPercentage() + '%' }"></div>
+                                </div>
+                                <div class="flex justify-between mt-3 text-[11px] font-bold uppercase tracking-tight">
+                                    <span class="text-brand-500">Kullanılan: <span x-text="tenant.current_month_ai_calls || 0"></span></span>
+                                    <span class="text-gray-400 dark:text-gray-500">Kalan: <span x-text="(tenant.subscription_plan === 'pro' ? '∞' : (tenant.subscription_plan === 'starter' ? 500 : 50)) - (tenant.current_month_ai_calls || 0)"></span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                         </div>
+                    </div>
+                    
+                    <!-- Smart Statistics Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-transparent dark:glass-card p-8 rounded-3xl shadow-sm border border-gray-50 dark:border-white/5 relative overflow-hidden group card-hover">
+                           <div class="relative z-10">
+                                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">AI Randevu Tahmini</h3>
+                                <div class="flex items-center gap-6">
+                                    <div class="relative w-24 h-24 flex items-center justify-center">
+                                        <svg class="w-full h-full transform -rotate-90">
+                                            <circle cx="48" cy="48" r="42" stroke="currentColor" stroke-width="8" fill="transparent" class="text-gray-100 dark:text-white/5" />
+                                            <circle cx="48" cy="48" r="42" stroke="currentColor" stroke-width="10" fill="transparent" stroke-linecap="round" :style="{ strokeDasharray: '263.9', strokeDashoffset: 263.9 - (263.9 * (stats.avg_probability || 0) / 100) }" class="text-brand-500 transition-all duration-1000 filter drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
+                                        </svg>
+                                        <span class="absolute text-2xl font-black text-gray-800 dark:text-white" x-text="(stats.avg_probability || 0) + '%' "></span>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-gray-800 dark:text-white text-xl">Satış Potansiyeli</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Aktif görüşmelerin randevuya dönüşme olasılığı yapay zeka tarafından hesaplanır.</p>
+                                    </div>
+                                </div>
+                           </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-transparent dark:glass-card p-8 rounded-3xl shadow-sm border border-gray-50 dark:border-white/5 relative overflow-hidden group card-hover">
+                            <div class="relative z-10 flex items-center gap-6">
+                                <div class="w-20 h-20 bg-brand-50 dark:bg-brand-900/30 rounded-3xl flex items-center justify-center text-brand-600 dark:text-brand-400 text-4xl shadow-inner border border-brand-100/20">🛡️</div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">AI ile Kurtarılan</h3>
+                                    <p class="text-4xl font-black text-gray-800 dark:text-white" x-text="stats.ai_rescued || 0"></p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">İnsan müdahalesi gerekmeden tamamlanan talepler.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity (Static for Mockup Feel) -->
+                    <div class="bg-white dark:bg-transparent dark:glass-card p-8 rounded-3xl shadow-sm border border-gray-50 dark:border-white/5">
+                        <h3 class="font-bold text-gray-800 dark:text-white mb-6">Son Aktiviteler</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-xl flex items-center justify-center">💬</div>
+                                <div class="flex-grow">
+                                    <p class="text-sm font-bold text-gray-800 dark:text-white">Yeni Mesaj - +90 532...</p>
+                                    <p class="text-[11px] text-gray-400">2 dakika önce</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 text-purple-500 rounded-xl flex items-center justify-center">📖</div>
+                                <div class="flex-grow">
+                                    <p class="text-sm font-bold text-gray-800 dark:text-white">Bilgi Bankası Güncellendi</p>
+                                    <p class="text-[11px] text-gray-400">15 dakika önce</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: AI SETTINGS -->
+                <div x-show="tab === 'ai_settings'" x-cloak class="space-y-6">
+                    <div class="bg-white dark:bg-transparent dark:glass-card p-8 rounded-3xl shadow-sm border border-gray-50 dark:border-white/5">
+                        <h2 class="text-2xl font-bold mb-2 text-gray-800 dark:text-white">Yapay Zeka Beyni & Bilgi Bankası</h2>
+                        <p class="text-gray-500 dark:text-gray-400 mb-8 font-medium">✨ Formları uğraşmadan doldurmak için Akıllı Asistan ile sohbet edin!</p>
+
+                        <!-- SİHİRBAZ CHATUI -->
+                        <div class="mb-8 border border-brand-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-sm flex flex-col bg-brand-50/30 dark:bg-white/5 relative backdrop-blur-md">
+                            <!-- Chat Geçmişi -->
+                            <div class="p-4 h-64 overflow-y-auto flex flex-col gap-3" id="chat-box">
+                                <template x-for="(msg, i) in chatMessages" :key="i">
+                                    <div class="flex flex-col gap-2" :class="msg.role === 'user' ? 'items-end' : 'items-start'">
+                                        <div :class="msg.role === 'user' ? 'bg-brand-600 text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'" class="px-4 py-2 rounded-2xl max-w-[80%] shadow-sm text-sm">
+                                            <p x-text="msg.content" class="whitespace-pre-wrap"></p>
+                                        </div>
+                                        <!-- Suggestions (Only show for the last assistant message) -->
+                                        <template x-if="msg.role === 'assistant' && i === chatMessages.length - 1 && msg.suggestions && msg.suggestions.length > 0">
+                                            <div class="flex flex-wrap gap-2 mt-1">
+                                                <template x-for="sug in msg.suggestions" :key="sug">
+                                                    <button @click="sendSuggestion(sug)" class="text-xs bg-white dark:bg-brand-900/40 border border-brand-200 dark:border-brand-500/50 text-brand-600 dark:text-white px-3 py-1.5 rounded-full hover:bg-brand-50 dark:hover:bg-brand-900/60 transition shadow-sm">
+                                                        ✨ <span x-text="sug"></span>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                                <div x-show="isChatting" class="self-start px-4 py-2 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                                    <span class="animate-pulse">Bot yazıyor...</span>
+                                </div>
+                                <div x-show="chatMessages.length === 0" class="m-auto text-gray-400 text-sm text-center">
+                                    <div class="text-4xl mb-2">💬</div>
+                                    "Asistanı Başlat" butonuna tıklayarak mülakata başlayın.
+                                </div>
+                            </div>
+                            
+                            <!-- Mesaj Gönderme / Alt Bar -->
+                            <div class="bg-white dark:bg-darkSidebar/50 p-4 border-t border-brand-100 dark:border-white/5 flex gap-2">
+                                <template x-if="chatMessages.length === 0">
+                                    <button type="button" @click="startChat()" class="flex-grow bg-brand-100 text-brand-700 hover:bg-brand-200 dark:bg-brand-900/40 dark:text-brand-400 font-bold py-2 px-4 rounded-lg transition">Sihirbazı Başlat</button>
+                                </template>
+                                <template x-if="chatMessages.length > 0">
+                                    <div class="flex flex-grow gap-2 w-full">
+                                        <input type="text" x-model="chatInput" @keydown.enter.prevent="sendMessage()" placeholder="Cevabınızı buraya yazın..." class="flex-grow px-5 py-3 rounded-xl border border-gray-200 dark:border-white/10 dark:bg-black/20 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
+                                        <button type="button" @click="sendMessage()" :disabled="isChatting || !chatInput" class="bg-brand-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-500 disabled:opacity-50 shadow-lg shadow-brand-500/30 transition">Gönder</button>
+                                    </div>
+                                </template>
+                            </div>
+
+                             <!-- Bilgiyi Çıkar Butonu -->
+                            <div x-show="chatMessages.length > 2" class="p-4 bg-brand-500/5 border-t border-brand-200 dark:border-white/5 flex justify-between items-center">
+                                <span class="text-xs text-brand-600 dark:text-gray-400">✨ Yeterli bilgi verdiyseniz ayarları otomatik oluşturun.</span>
+                                <button @click="generateConfig()" :disabled="isGenerating" class="bg-gradient-to-r from-brand-600 to-purple-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-brand-500/20 hover:scale-105 transition text-sm flex items-center gap-2">
+                                    <span x-show="!isGenerating">🪄 Sihri Başlat</span>
+                                    <span x-show="isGenerating">İşleniyor...</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4 mb-4">
+                            <hr class="flex-grow border-gray-200 dark:border-gray-800" />
+                            <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Veya Manuel Doldur</span>
+                            <hr class="flex-grow border-gray-200 dark:border-gray-800" />
+                        </div>
+
+                        <form @submit.prevent="updateSettings" class="space-y-4">
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Yapay Zeka Ses Tonu (Kişilik)</label>
+                                <input type="text" x-model="form.ai_personality" placeholder="Örn: Çok kibar bir diyetisyensin, motive edici konuş." class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-darkBg dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <p class="text-xs text-gray-500 mt-1">Botunuzun müşterilere nasıl hitap etmesini istediğinizi yazın.</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Verilen Hizmetler (Virgülle ayrılmış)</label>
+                                <input type="text" x-model="form.services" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-darkBg dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium mb-1 dark:text-gray-300">Bilgi Bankası (Sabit Sorular ve Cevaplar)</label>
+                                <textarea x-model="form.faq_text" rows="6" placeholder="Klinik adresimiz Şişli... Otoparkımız var... Muayene ücreti 1000 TL..." class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-darkBg dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
+                                <p class="text-xs text-gray-500 mt-1">Yapay zeka, müşterinin tüm sorularına buradaki kurallara bakarak otonom yanıt verir.</p>
+                            </div>
+
+                            <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg hover:shadow-brand-500/50 transition">
+                                Hafızayı Güncelle (Kaydet)
+                            </button>
+                            <span x-show="saveSuccess" class="ml-4 text-green-500 font-bold transition-opacity">✅ Başarıyla kaydedildi!</span>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- TAB: INBOX (LIVE CHAT) -->
+                <div x-show="tab === 'inbox'" x-cloak class="h-[calc(100vh-220px)] flex flex-col sm:flex-row gap-6">
+                    <!-- Chat List -->
+                    <div class="w-full sm:w-80 bg-white dark:bg-transparent dark:glass-card rounded-3xl shadow-sm border border-gray-50 dark:border-white/5 flex flex-col overflow-hidden">
+                        <div class="p-6 border-b border-gray-50 dark:border-white/5 font-bold flex justify-between items-center bg-gray-50/50 dark:bg-white/5">
+                            <span class="text-gray-800 dark:text-white">Konuşmalar</span>
+                            <button @click="fetchChats()" class="text-xs text-blue-500 hover:underline">Yenile</button>
+                        </div>
+                        <div class="flex-grow overflow-y-auto">
+                            <template x-for="chat in chats" :key="chat.phone">
+                                <div @click="selectChat(chat)" :class="activeChatPhone === chat.phone ? 'bg-brand-50 dark:bg-brand-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800'" class="p-4 border-b border-gray-50 dark:border-gray-800 cursor-pointer transition">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-bold text-sm" x-text="chat.phone"></span>
+                                        <span class="text-[10px] text-gray-400" x-text="formatTime(chat.last_message_at)"></span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 line-clamp-1" x-text="chat.last_message"></p>
+                                </div>
+                            </template>
+                            <div x-show="chats.length === 0" class="p-8 text-center text-gray-400 text-sm">Mesaj bulunamadı.</div>
+                        </div>
+                    </div>
+
+                    <!-- Message History -->
+                    <div class="flex-grow bg-white dark:bg-transparent dark:glass-card rounded-3xl shadow-sm border border-gray-50 dark:border-white/5 flex flex-col overflow-hidden">
+                        <template x-if="activeChatPhone">
+                            <div class="flex flex-col h-full">
+                                <div class="p-6 border-b border-gray-50 dark:border-white/5 font-bold bg-gray-50/50 dark:bg-white/5 flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-500">👤</div>
+                                    <span class="text-gray-800 dark:text-white" x-text="activeChatPhone"></span>
+                                </div>
+                                <div class="flex-grow p-4 overflow-y-auto flex flex-col gap-4" id="inbox-messages">
+                                    <template x-for="msg in activeMessages" :key="msg.id">
+                                        <div :class="msg.direction === 'outgoing' ? 'self-end bg-brand-600 text-white' : 'self-start bg-gray-100/80 dark:bg-white/10 text-gray-800 dark:text-gray-100 border border-black/5 dark:border-white/5'" class="max-w-[80%] px-4 py-2.5 rounded-2xl shadow-sm relative group backdrop-blur-sm">
+                                            <p x-text="msg.body" class="whitespace-pre-wrap text-sm leading-relaxed"></p>
+                                            <div class="flex justify-between items-center mt-1.5 gap-4">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-[8px] font-bold uppercase tracking-wider opacity-60" x-text="msg.direction === 'incoming' ? 'Müşteri' : (msg.source === 'manual' ? 'Siz' : '🤖 AI')"></span>
+                                                    <template x-if="msg.sentiment">
+                                                        <span :class="msg.sentiment === 'positive' ? 'text-green-500' : (msg.sentiment === 'negative' ? 'text-red-500' : 'text-gray-400')" class="text-[10px]" :title="'Sentiment: ' + msg.sentiment">
+                                                            <template x-if="msg.sentiment === 'positive'"><span>😊</span></template>
+                                                            <template x-if="msg.sentiment === 'negative'"><span>😠</span></template>
+                                                            <template x-if="msg.sentiment === 'neutral'"><span>😐</span></template>
+                                                        </span>
+                                                    </template>
+                                                </div>
+                                                <span class="text-[9px] opacity-50 block text-right font-medium" x-text="formatTime(msg.created_at)"></span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                                <!-- Manuel Yanıt Alanı -->
+                                <div class="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-darkSidebar/50 flex gap-2">
+                                    <input type="text" x-model="inboxInput" @keydown.enter.prevent="sendManualReply()" placeholder="Müşteriye cevap yazın..." class="flex-grow px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-darkBg dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                    <button @click="sendManualReply()" :disabled="!inboxInput" class="bg-brand-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-brand-500 disabled:opacity-50 flex items-center gap-1">
+                                        Gönder
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="!activeChatPhone">
+                            <div class="m-auto text-center text-gray-400">
+                                <div class="text-5xl mb-4">📫</div>
+                                <p>Mesajları görmek için soldan bir konuşma seçin.</p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- TAB: INTEGRATION -->
+                <div x-show="tab === 'integration'" x-cloak class="space-y-6">
+                    <div class="bg-white dark:bg-darkCard p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+                        <h2 class="text-2xl font-bold mb-6">API & Bağlantı Ayarları</h2>
+                        <form @submit.prevent="updateSettings" class="space-y-4">
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">WhatsApp/Twilio Numarası</label>
+                                    <input type="text" x-model="form.twilio_number" placeholder="+14155230000" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-darkBg dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                </div>
+                                <div class="opacity-50 pointer-events-none" title="Eklenecek">
+                                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Twilio Auth Token</label>
+                                    <input type="password" disabled value="****************" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-darkBg dark:text-white">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Cal.com API Key</label>
+                                    <input type="password" x-model="form.cal_api_key" placeholder="cal_live_xxxx" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-darkBg dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1 dark:text-gray-300">Cal.com EventType ID</label>
+                                    <input type="number" x-model="form.cal_event_type_id" placeholder="123456" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-darkBg dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg hover:shadow-brand-500/50 transition mt-4">
+                                Ayarları Kaydet
+                            </button>
+                            <span x-show="saveSuccess" class="ml-4 text-green-500 font-bold transition-opacity">✅ Başarıyla kaydedildi!</span>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function dashboardApp() {
+            return {
+                isDark: true,
+                loading: true,
+                tab: 'overview',
+                tenant: {},
+                form: {},
+                saveSuccess: false,
+                token: localStorage.getItem('saas_token'),
+                
+                // Chat Wizard States
+                chatMessages: [],
+                chatInput: '',
+                isChatting: false,
+                isGenerating: false,
+
+                // Inbox States
+                chats: [],
+                activeChatPhone: null,
+                activeMessages: [],
+                inboxInput: '',
+                inboxInterval: null,
+                stats: { total_appointments: 0, ai_rescued: 0, avg_probability: 0 },
+
+                async init() {
+                    if (localStorage.theme === 'light') { this.isDark = false; document.documentElement.classList.remove('dark'); }
+                    
+                    if (!this.token) {
+                        window.location.href = '/login.html';
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch('/api/dashboard/me', {
+                            headers: { 'Authorization': `Bearer ${this.token}` }
+                        });
+                        if (!res.ok) throw new Error('Oturum süresi dolmuş veya geçersiz');
+                        
+                        this.tenant = await res.json();
+                        this.form = JSON.parse(JSON.stringify(this.tenant)); // deep copy
+                        await this.fetchStats();
+                        this.loading = false;
+                    } catch (e) {
+                        alert(e.message);
+                        this.logout();
+                    }
+                },
+
+                getPercentage() {
+                    if (!this.tenant) return 0;
+                    const max = this.tenant.subscription_plan === 'free' ? 50 : (this.tenant.subscription_plan === 'starter' ? 500 : 5000);
+                    const current = this.tenant.current_month_ai_calls || 0;
+                    return Math.min(100, Math.round((current / max) * 100));
+                },
+
+                async fetchStats() {
+                    try {
+                        const res = await fetch('/api/dashboard/stats', {
+                            headers: { 'Authorization': `Bearer ${this.token}` }
+                        });
+                        if(res.ok) this.stats = await res.json();
+                    } catch(e) { console.error(e); }
+                },
+
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    document.documentElement.classList.toggle('dark', this.isDark);
+                    localStorage.theme = this.isDark ? 'dark' : 'light';
+                },
+
+                async updateSettings() {
+                    this.saveSuccess = false;
+                    const res = await fetch('/api/dashboard/me', {
+                        method: 'PUT',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${this.token}`
+                        },
+                        body: JSON.stringify(this.form)
+                    });
+                    if (res.ok) {
+                        this.tenant = await res.json();
+                        this.form = JSON.parse(JSON.stringify(this.tenant));
+                        this.saveSuccess = true;
+                        setTimeout(() => this.saveSuccess = false, 3000);
+                    } else {
+                        alert('Kayıt başarısız oldu.');
+                    }
+                },
+
+                // ---- WIZARD CHAT METHODS ----
+                async startChat() {
+                    await this.chatApiCall([]);
+                },
+
+                async sendMessage() {
+                    const text = this.chatInput.trim();
+                    if (!text) return;
+                    this.chatInput = '';
+                    this.chatMessages.push({ role: 'user', content: text });
+                    this.scrollToBottom();
+                    await this.chatApiCall(this.chatMessages);
+                },
+
+                async chatApiCall(messages) {
+                    this.isChatting = true;
+                    try {
+                        const res = await fetch('/api/onboarding/chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}` },
+                            body: JSON.stringify({ messages, sector: this.tenant.sector })
+                        });
+                        const data = await res.json();
+                        if(data.reply) {
+                            this.chatMessages.push({ 
+                                role: 'assistant', 
+                                content: data.reply,
+                                suggestions: data.suggestions || []
+                            });
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        this.chatMessages.push({ role: 'assistant', content: 'Üzgünüm, şu an bağlantı sorunu var.' });
+                    }
+                    this.isChatting = false;
+                    this.scrollToBottom();
+                },
+
+                sendSuggestion(text) {
+                    this.chatInput = text;
+                    this.sendMessage();
+                },
+
+                scrollToBottom() {
+                    setTimeout(() => {
+                        const box = document.getElementById('chat-box');
+                        if(box) box.scrollTop = box.scrollHeight;
+                    }, 50);
+                },
+
+                async generateConfig() {
+                    if (this.chatMessages.length === 0) return;
+                    this.isGenerating = true;
+                    try {
+                        const res = await fetch('/api/onboarding/generate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}` },
+                            body: JSON.stringify({ messages: this.chatMessages, sector: this.tenant.sector })
+                        });
+                        const data = await res.json();
+                        if(data.ai_personality) this.form.ai_personality = data.ai_personality;
+                        if(data.services) this.form.services = data.services;
+                        if(data.faq_text) this.form.faq_text = data.faq_text;
+                        
+                        alert("Sihirli bir şekilde bilgileriniz formlara dolduruldu! Artık alt kısımdan 'Hafızayı Güncelle' butonuna basarak kaydedebilirsiniz.");
+                    } catch(e) {
+                        console.error(e);
+                        alert("Bilgiler çıkarılırken bir hata oluştu.");
+                    }
+                    this.isGenerating = false;
+                },
+
+                // ---- INBOX METHODS ----
+                async openInbox() {
+                    this.tab = 'inbox';
+                    await this.fetchChats();
+                    
+                    // Polling başlat
+                    if(this.inboxInterval) clearInterval(this.inboxInterval);
+                    this.inboxInterval = setInterval(() => {
+                        if(this.tab === 'inbox') {
+                            this.fetchChats(false); // Arka planda sessiz güncelle
+                            if(this.activeChatPhone) this.fetchMessages(this.activeChatPhone, false);
+                        } else {
+                            clearInterval(this.inboxInterval);
+                        }
+                    }, 5000);
+                },
+
+                async fetchChats(showLoading = true) {
+                    try {
+                        const res = await fetch('/api/chats', {
+                            headers: { 'Authorization': `Bearer ${this.token}` }
+                        });
+                        if(res.ok) this.chats = await res.json();
+                    } catch(e) { console.error(e); }
+                },
+
+                async selectChat(chat) {
+                    this.activeChatPhone = chat.phone;
+                    await this.fetchMessages(chat.phone);
+                    this.scrollToInboxBottom();
+                },
+
+                async fetchMessages(phone, showLoading = true) {
+                    try {
+                        const res = await fetch(`/api/chats/${phone}`, {
+                            headers: { 'Authorization': `Bearer ${this.token}` }
+                        });
+                        if(res.ok) {
+                            const data = await res.json();
+                            // Sadece yeni mesaj varsa state'i güncelle (titremeyi engellemek için)
+                            if(JSON.stringify(data) !== JSON.stringify(this.activeMessages)) {
+                                this.activeMessages = data;
+                                this.scrollToInboxBottom();
+                            }
+                        }
+                    } catch(e) { console.error(e); }
+                },
+
+                async sendManualReply() {
+                    if(!this.inboxInput || !this.activeChatPhone) return;
+                    const body = this.inboxInput;
+                    this.inboxInput = '';
+                    
+                    try {
+                        const res = await fetch(`/api/chats/${this.activeChatPhone}/send`, {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${this.token}`
+                            },
+                            body: JSON.stringify({ body })
+                        });
+                        if(res.ok) {
+                            await this.fetchMessages(this.activeChatPhone);
+                        } else {
+                            alert("Mesaj gönderilemedi.");
+                        }
+                    } catch(e) {
+                        console.error(e);
+                        alert("Hata oluştu.");
+                    }
+                },
+
+                scrollToInboxBottom() {
+                    setTimeout(() => {
+                        const box = document.getElementById('inbox-messages');
+                        if(box) box.scrollTop = box.scrollHeight;
+                    }, 100);
+                },
+
+                formatTime(iso) {
+                    if(!iso) return '';
+                    const d = new Date(iso);
+                    return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                },
+
+                logout() {
+                    if(this.inboxInterval) clearInterval(this.inboxInterval);
+                    localStorage.removeItem('saas_token');
+                    window.location.href = '/login.html';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -2,73 +2,113 @@
   "version": 1,
   "entries": [
     {
-      "id": "hours",
+      "id": "saatler",
       "patterns": [
+        "saat",
+        "çalışma saat",
+        "açılış",
+        "kapanış",
+        "kaçta açılıyor",
+        "kaçta kapanıyor",
+        "ne zaman açık",
+        "mesai",
         "hours",
-        "open(ing)? hours",
-        "when are you open",
-        "close|closing",
-        "what time.*open",
-        "what time.*close"
+        "open",
+        "close"
       ],
-      "answer": "Hours:\nMon–Fri: ${BIZ_HOURS_MON_FRI}\nSat: ${BIZ_HOURS_SAT}\nSun: ${BIZ_HOURS_SUN}\n(Local time: ${RESTAURANT_TIMEZONE})"
+      "answer": "🕐 Çalışma Saatlerimiz:\nPazartesi–Cuma: ${BIZ_HOURS_MON_FRI}\nCumartesi: ${BIZ_HOURS_SAT}\nPazar: ${BIZ_HOURS_SUN}"
     },
     {
-      "id": "location",
+      "id": "adres",
       "patterns": [
-        "address",
+        "adres",
+        "nerede",
+        "konum",
+        "nasıl gel",
+        "yol tarifi",
+        "otopark",
         "location",
-        "where are you",
-        "how do i get there",
-        "parking"
+        "address",
+        "where"
       ],
-      "answer": "${RESTAURANT_NAME} is located at:\n${RESTAURANT_ADDRESS}\nParking: Street and nearby garages (availability varies)."
+      "answer": "📍 ${BUSINESS_NAME}\n${BUSINESS_ADDRESS}\n\nYol tarifi için Google Maps'te \"${BUSINESS_NAME}\" arayabilirsiniz."
     },
     {
-      "id": "menu_dietary",
+      "id": "hizmetler",
       "patterns": [
-        "menu",
-        "vegetarian|vegan",
-        "gluten(-| )?free",
-        "allerg(y|ies)",
-        "nut free",
-        "dairy free"
+        "hizmet",
+        "ne yapıyor",
+        "neler var",
+        "servis",
+        "tedavi",
+        "muayene",
+        "service",
+        "what do you"
       ],
-      "answer": "Menu & dietary notes:\nWe have vegetarian options, and we can flag common allergens.\nFor severe allergies, tell me what to avoid and we’ll confirm with the kitchen."
+      "answer": "📋 Sunduğumuz Hizmetler:\n${BUSINESS_SERVICES}\n\nRandevu almak için hizmet adını ve tercih ettiğiniz tarih/saati yazabilirsiniz."
     },
     {
-      "id": "takeout_delivery",
+      "id": "fiyat",
       "patterns": [
-        "takeout",
-        "pickup",
-        "to go",
-        "delivery",
-        "doordash|uber eats|grubhub"
+        "fiyat",
+        "ücret",
+        "kaç lira",
+        "ne kadar",
+        "maliyet",
+        "price",
+        "cost",
+        "how much"
       ],
-      "answer": "Takeout: Yes.\nDelivery: Available via third-party services (varies).\nTell me what you want and I can help prep a pickup time (demo)."
+      "answer": "💰 Fiyat bilgisi için lütfen almak istediğiniz hizmeti belirtin.\nDetaylı bilgi için bizi arayabilirsiniz: ${BUSINESS_PHONE}"
     },
     {
-      "id": "reservations",
+      "id": "randevu",
       "patterns": [
-        "reservation",
-        "reserve",
-        "book a table",
-        "table for \\d+",
-        "party of \\d+"
+        "randevu",
+        "rezervasyon",
+        "appointment",
+        "book",
+        "reserve"
       ],
-      "answer": "I can help with reservations. Tell me party size, date, and time — or just say “reservation” to start."
+      "answer": "📅 Randevu almak için lütfen şu bilgileri paylaşın:\n• Hizmet türü\n• Tercih ettiğiniz tarih\n• Tercih ettiğiniz saat\n\nÖrnek: \"Yarın saat 14:00'te genel muayene için randevu almak istiyorum\""
     },
     {
-      "id": "human",
+      "id": "iptal_politikasi",
       "patterns": [
+        "iptal",
+        "vazgeç",
+        "cancel",
+        "randevu.*iptal"
+      ],
+      "answer": "❌ Randevu İptal Politikası:\n• Randevunuzdan en az 24 saat önce iptal edebilirsiniz.\n• İptal için randevu referans numaranızı paylaşın.\n• Sık iptal durumunda randevu hakkınız kısıtlanabilir."
+    },
+    {
+      "id": "temsilci",
+      "patterns": [
+        "insan",
+        "temsilci",
+        "yetki",
+        "müdür",
+        "biriyle konuş",
+        "gerçek kişi",
         "human",
         "person",
         "representative",
-        "manager",
-        "speak to someone",
-        "talk to someone"
+        "manager"
       ],
-      "answer": "No problem — I can loop in a human. Tell me what’s going on and I’ll pass it along."
+      "answer": "👤 Sizi bir temsilciye bağlamak istiyorum. Lütfen konunuzu kısaca açıklayın, en kısa sürede size dönüş yapılacak."
+    },
+    {
+      "id": "iletisim",
+      "patterns": [
+        "telefon",
+        "ara",
+        "iletişim",
+        "contact",
+        "phone",
+        "call"
+      ],
+      "answer": "📞 Bize Ulaşın:\n${BUSINESS_NAME}\n📍 ${BUSINESS_ADDRESS}\n📱 ${BUSINESS_PHONE}\n🕐 ${BIZ_HOURS_MON_FRI} (Hafta içi)"
     }
   ]
 }
