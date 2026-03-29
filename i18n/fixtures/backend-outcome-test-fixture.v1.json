@@ -1,0 +1,18 @@
+{
+  "cases": [
+    {
+      "id": "backend-outcome-001",
+      "description": "Appointment successfully created",
+      "expected": {
+        "message_key": "APPOINTMENT_CONFIRMED"
+      }
+    },
+    {
+      "id": "backend-outcome-002",
+      "description": "Appointment cancelled by user",
+      "expected": {
+        "message_key": "APPOINTMENT_CANCELLED"
+      }
+    }
+  ]
+}

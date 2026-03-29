@@ -1,0 +1,18 @@
+{
+  "cases": [
+    {
+      "id": "intent-routing-001",
+      "description": "Unknown intent fallback",
+      "expected": {
+        "message_key": "INTENT_UNKNOWN"
+      }
+    },
+    {
+      "id": "intent-routing-002",
+      "description": "Booking intent — appointment confirmed",
+      "expected": {
+        "message_key": "APPOINTMENT_CONFIRMED"
+      }
+    }
+  ]
+}

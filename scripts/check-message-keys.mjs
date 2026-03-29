@@ -64,10 +64,10 @@ function main() {
 
   const catalogAbs = path.join(repoRoot, config.catalogPath);
 
-  // Katalog henüz eklenmediyse CI kırmayalım
+  // Katalog eksikse CI hata versin
   if (!fs.existsSync(catalogAbs)) {
-    console.warn(`[warn] Catalog not found (${config.catalogPath}). Skipping (pass).`);
-    process.exit(0);
+    console.error(`[error] Catalog not found: ${config.catalogPath} (resolved: ${catalogAbs}). Add the catalog file or update catalogPath in the config.`);
+    process.exit(1);
   }
 
   const languages = config.languages ?? ["tr", "en", "de", "nl"];

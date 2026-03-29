@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "version": "1.4",
+    "updated_at": "2026-03-29",
+    "languages": ["tr", "en", "de", "nl"]
+  },
+  "APPOINTMENT_CONFIRMED": {
+    "tr": "Randevunuz onaylandı.",
+    "en": "Your appointment has been confirmed.",
+    "de": "Ihr Termin wurde bestätigt.",
+    "nl": "Uw afspraak is bevestigd."
+  },
+  "APPOINTMENT_CANCELLED": {
+    "tr": "Randevunuz iptal edildi.",
+    "en": "Your appointment has been cancelled.",
+    "de": "Ihr Termin wurde storniert.",
+    "nl": "Uw afspraak is geannuleerd."
+  },
+  "EMAIL_INVALID": {
+    "tr": "Geçersiz e-posta adresi.",
+    "en": "Invalid email address.",
+    "de": "Ungültige E-Mail-Adresse.",
+    "nl": "Ongeldig e-mailadres."
+  },
+  "INTENT_UNKNOWN": {
+    "tr": "İsteğinizi anlayamadım. Lütfen tekrar deneyin.",
+    "en": "I could not understand your request. Please try again.",
+    "de": "Ich konnte Ihre Anfrage nicht verstehen. Bitte versuchen Sie es erneut.",
+    "nl": "Ik kon uw verzoek niet begrijpen. Probeer het opnieuw."
+  }
+}

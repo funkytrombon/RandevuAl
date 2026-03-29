@@ -1,0 +1,18 @@
+{
+  "cases": [
+    {
+      "id": "email-validation-001",
+      "description": "Invalid email format",
+      "expected": {
+        "message_key": "EMAIL_INVALID"
+      }
+    },
+    {
+      "id": "email-validation-002",
+      "description": "Empty email field",
+      "expected": {
+        "message_key": "EMAIL_INVALID"
+      }
+    }
+  ]
+}
