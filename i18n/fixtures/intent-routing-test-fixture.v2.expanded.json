@@ -1,0 +1,55 @@
+{
+  "fixture": "intent-routing-test-fixture",
+  "version": "v2.expanded",
+  "cases": [
+    {
+      "id": "greeting",
+      "description": "User sends a greeting",
+      "expected": {
+        "message_key": "INTENT_GREETING"
+      }
+    },
+    {
+      "id": "book-appointment",
+      "description": "User wants to book an appointment",
+      "expected": {
+        "message_key": "INTENT_BOOK_APPOINTMENT"
+      }
+    },
+    {
+      "id": "cancel-appointment",
+      "description": "User wants to cancel an appointment",
+      "expected": {
+        "message_key": "INTENT_CANCEL_APPOINTMENT"
+      }
+    },
+    {
+      "id": "check-status",
+      "description": "User asks for appointment status",
+      "expected": {
+        "message_key": "INTENT_CHECK_STATUS"
+      }
+    },
+    {
+      "id": "reschedule",
+      "description": "User wants to reschedule an appointment",
+      "expected": {
+        "message_key": "INTENT_RESCHEDULE"
+      }
+    },
+    {
+      "id": "unknown-intent",
+      "description": "Intent could not be determined",
+      "expected": {
+        "message_key": "INTENT_UNKNOWN"
+      }
+    },
+    {
+      "id": "list-appointments",
+      "description": "User wants to list their appointments",
+      "expected": {
+        "message_key": "INTENT_LIST_APPOINTMENTS"
+      }
+    }
+  ]
+}

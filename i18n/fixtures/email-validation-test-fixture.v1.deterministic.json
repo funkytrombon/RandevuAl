@@ -1,0 +1,41 @@
+{
+  "fixture": "email-validation-test-fixture",
+  "version": "v1.deterministic",
+  "cases": [
+    {
+      "id": "valid-email",
+      "description": "Email address is valid",
+      "expected": {
+        "message_key": "EMAIL_VALIDATION_PASSED"
+      }
+    },
+    {
+      "id": "invalid-format",
+      "description": "Email address has an invalid format",
+      "expected": {
+        "message_key": "EMAIL_INVALID_FORMAT"
+      }
+    },
+    {
+      "id": "empty-email",
+      "description": "Email address field is empty",
+      "expected": {
+        "message_key": "EMAIL_EMPTY"
+      }
+    },
+    {
+      "id": "domain-not-allowed",
+      "description": "Email domain is not in the allowed list",
+      "expected": {
+        "message_key": "EMAIL_DOMAIN_NOT_ALLOWED"
+      }
+    },
+    {
+      "id": "email-already-registered",
+      "description": "Email is already registered in the system",
+      "expected": {
+        "message_key": "EMAIL_ALREADY_REGISTERED"
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "fixture": "backend-outcome-test-fixture",
+  "version": "v1",
+  "cases": [
+    {
+      "id": "book-success",
+      "description": "Appointment booked successfully",
+      "expected": {
+        "message_key": "APPOINTMENT_BOOKED_SUCCESS"
+      }
+    },
+    {
+      "id": "cancel-success",
+      "description": "Appointment cancelled successfully",
+      "expected": {
+        "message_key": "APPOINTMENT_CANCELLED"
+      }
+    },
+    {
+      "id": "slot-unavailable",
+      "description": "Requested time slot is not available",
+      "expected": {
+        "message_key": "SLOT_UNAVAILABLE"
+      }
+    },
+    {
+      "id": "user-not-found",
+      "description": "User account not found",
+      "expected": {
+        "message_key": "USER_NOT_FOUND"
+      }
+    },
+    {
+      "id": "duplicate-appointment",
+      "description": "Appointment already exists for this slot",
+      "expected": {
+        "message_key": "APPOINTMENT_ALREADY_EXISTS"
+      }
+    },
+    {
+      "id": "past-date",
+      "description": "Appointment date is in the past",
+      "expected": {
+        "message_key": "APPOINTMENT_DATE_IN_PAST"
+      }
+    },
+    {
+      "id": "reschedule-success",
+      "description": "Appointment rescheduled successfully",
+      "expected": {
+        "message_key": "APPOINTMENT_RESCHEDULED"
+      }
+    }
+  ]
+}

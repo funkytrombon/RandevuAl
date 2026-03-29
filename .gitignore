@@ -1,3 +1,6 @@
+# Generated artifacts
+artifacts/
+
 # Logs
 logs
 *.log

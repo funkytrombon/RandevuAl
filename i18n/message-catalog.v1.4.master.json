@@ -1,0 +1,121 @@
+{
+  "meta": {
+    "version": "v1.4",
+    "languages": ["tr", "en", "de", "nl"],
+    "description": "RandevuAl i18n message catalog"
+  },
+  "APPOINTMENT_BOOKED_SUCCESS": {
+    "tr": "Randevunuz başarıyla oluşturuldu.",
+    "en": "Your appointment has been successfully booked.",
+    "de": "Ihr Termin wurde erfolgreich gebucht.",
+    "nl": "Uw afspraak is succesvol geboekt."
+  },
+  "APPOINTMENT_CANCELLED": {
+    "tr": "Randevunuz başarıyla iptal edildi.",
+    "en": "Your appointment has been successfully cancelled.",
+    "de": "Ihr Termin wurde erfolgreich storniert.",
+    "nl": "Uw afspraak is succesvol geannuleerd."
+  },
+  "SLOT_UNAVAILABLE": {
+    "tr": "Seçilen zaman dilimi müsait değil. Lütfen farklı bir saat seçin.",
+    "en": "The selected time slot is not available. Please choose a different time.",
+    "de": "Das ausgewählte Zeitfenster ist nicht verfügbar. Bitte wählen Sie eine andere Zeit.",
+    "nl": "Het geselecteerde tijdslot is niet beschikbaar. Kies een andere tijd."
+  },
+  "USER_NOT_FOUND": {
+    "tr": "Kullanıcı bulunamadı.",
+    "en": "User not found.",
+    "de": "Benutzer nicht gefunden.",
+    "nl": "Gebruiker niet gevonden."
+  },
+  "APPOINTMENT_ALREADY_EXISTS": {
+    "tr": "Bu zaman dilimi için zaten bir randevunuz bulunmaktadır.",
+    "en": "You already have an appointment for this time slot.",
+    "de": "Sie haben bereits einen Termin für dieses Zeitfenster.",
+    "nl": "U heeft al een afspraak voor dit tijdslot."
+  },
+  "APPOINTMENT_DATE_IN_PAST": {
+    "tr": "Geçmiş bir tarih için randevu oluşturulamaz.",
+    "en": "Cannot create an appointment for a date in the past.",
+    "de": "Es kann kein Termin für ein vergangenes Datum erstellt werden.",
+    "nl": "Er kan geen afspraak worden gemaakt voor een datum in het verleden."
+  },
+  "APPOINTMENT_RESCHEDULED": {
+    "tr": "Randevunuz başarıyla yeniden planlandı.",
+    "en": "Your appointment has been successfully rescheduled.",
+    "de": "Ihr Termin wurde erfolgreich neu geplant.",
+    "nl": "Uw afspraak is succesvol opnieuw ingepland."
+  },
+  "INTENT_GREETING": {
+    "tr": "Merhaba! Size nasıl yardımcı olabilirim?",
+    "en": "Hello! How can I help you?",
+    "de": "Hallo! Wie kann ich Ihnen helfen?",
+    "nl": "Hallo! Hoe kan ik u helpen?"
+  },
+  "INTENT_BOOK_APPOINTMENT": {
+    "tr": "Randevu almak istiyorsunuz. Hangi tarih ve saati tercih edersiniz?",
+    "en": "You'd like to book an appointment. What date and time do you prefer?",
+    "de": "Sie möchten einen Termin buchen. Welches Datum und welche Uhrzeit bevorzugen Sie?",
+    "nl": "U wilt een afspraak boeken. Welke datum en tijd heeft uw voorkeur?"
+  },
+  "INTENT_CANCEL_APPOINTMENT": {
+    "tr": "Randevunuzu iptal etmek istiyorsunuz. Hangi randevuyu iptal etmek istersiniz?",
+    "en": "You'd like to cancel an appointment. Which appointment would you like to cancel?",
+    "de": "Sie möchten einen Termin stornieren. Welchen Termin möchten Sie stornieren?",
+    "nl": "U wilt een afspraak annuleren. Welke afspraak wilt u annuleren?"
+  },
+  "INTENT_CHECK_STATUS": {
+    "tr": "Randevunuzun durumunu kontrol etmek istiyorsunuz.",
+    "en": "You'd like to check the status of your appointment.",
+    "de": "Sie möchten den Status Ihres Termins überprüfen.",
+    "nl": "U wilt de status van uw afspraak controleren."
+  },
+  "INTENT_RESCHEDULE": {
+    "tr": "Randevunuzu yeniden planlamak istiyorsunuz.",
+    "en": "You'd like to reschedule your appointment.",
+    "de": "Sie möchten Ihren Termin neu planen.",
+    "nl": "U wilt uw afspraak opnieuw inplannen."
+  },
+  "INTENT_UNKNOWN": {
+    "tr": "Talebinizi anlayamadım. Lütfen tekrar açıklar mısınız?",
+    "en": "I could not understand your request. Could you please explain again?",
+    "de": "Ich konnte Ihre Anfrage nicht verstehen. Könnten Sie es bitte erneut erklären?",
+    "nl": "Ik kon uw verzoek niet begrijpen. Kunt u het opnieuw uitleggen?"
+  },
+  "INTENT_LIST_APPOINTMENTS": {
+    "tr": "Randevularınızı listelemek istiyorsunuz.",
+    "en": "You'd like to list your appointments.",
+    "de": "Sie möchten Ihre Termine auflisten.",
+    "nl": "U wilt uw afspraken weergeven."
+  },
+  "EMAIL_VALIDATION_PASSED": {
+    "tr": "E-posta adresi geçerli.",
+    "en": "Email address is valid.",
+    "de": "E-Mail-Adresse ist gültig.",
+    "nl": "E-mailadres is geldig."
+  },
+  "EMAIL_INVALID_FORMAT": {
+    "tr": "Geçersiz e-posta adresi formatı.",
+    "en": "Invalid email address format.",
+    "de": "Ungültiges E-Mail-Adressformat.",
+    "nl": "Ongeldig e-mailadresformaat."
+  },
+  "EMAIL_EMPTY": {
+    "tr": "E-posta adresi boş olamaz.",
+    "en": "Email address cannot be empty.",
+    "de": "E-Mail-Adresse darf nicht leer sein.",
+    "nl": "E-mailadres mag niet leeg zijn."
+  },
+  "EMAIL_DOMAIN_NOT_ALLOWED": {
+    "tr": "Bu e-posta alan adı kabul edilmemektedir.",
+    "en": "This email domain is not allowed.",
+    "de": "Diese E-Mail-Domain ist nicht zulässig.",
+    "nl": "Dit e-maildomein is niet toegestaan."
+  },
+  "EMAIL_ALREADY_REGISTERED": {
+    "tr": "Bu e-posta adresi zaten kayıtlı.",
+    "en": "This email address is already registered.",
+    "de": "Diese E-Mail-Adresse ist bereits registriert.",
+    "nl": "Dit e-mailadres is al geregistreerd."
+  }
+}
